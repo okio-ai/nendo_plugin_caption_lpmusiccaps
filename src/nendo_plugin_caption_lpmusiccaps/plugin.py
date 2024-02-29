@@ -1,6 +1,7 @@
 """Nendo plugin for captioning music using the LPMusicCaps model."""
 import os.path
 from typing import Any
+from pathlib import Path
 
 import torch
 from lpmc.music_captioning.captioning import get_audio
@@ -61,11 +62,13 @@ class CaptionLPMusicCaps(NendoAnalysisPlugin):
         """Initialize the plugin."""
         super().__init__(**data)
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        if not os.path.isfile(settings.model):
-            os.makedirs("models", exist_ok=True)
-            torch.hub.download_url_to_file(settings.download_url, settings.model)
+        model_dir = os.path.join(Path.home(), ".cache", "nendo", "models")
+        model_path = os.path.join(model_dir, settings.model)
+        if not os.path.isfile(model_path):
+            os.makedirs(model_dir, exist_ok=True)
+            torch.hub.download_url_to_file(settings.download_url, model_path)
         self.model = BartCaptionModel(max_length=settings.max_length)
-        state_dict = torch.load(settings.model, map_location=self.device)["state_dict"]
+        state_dict = torch.load(model_path, map_location=self.device)["state_dict"]
         self.model.load_state_dict(state_dict)
         self.model.to(self.device)
         self.model.eval()

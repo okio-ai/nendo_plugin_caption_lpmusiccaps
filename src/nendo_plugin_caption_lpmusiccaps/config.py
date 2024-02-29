@@ -13,7 +13,7 @@ class CaptionLPMusicCapsConfig(NendoConfig):
         max_length (int): The maximum length of the caption. Defaults to 128.
     """
 
-    model: str = Field("models/transfer.pth")
+    model: str = Field("transfer.pth")
     download_url: str = Field(
         "https://huggingface.co/seungheondoh/lp-music-caps/resolve/main/transfer.pth",
     )
