@@ -72,6 +72,18 @@ class CaptionLPMusicCaps(NendoAnalysisPlugin):
         self.model.load_state_dict(state_dict)
         self.model.to(self.device)
         self.model.eval()
+        
+    @NendoAnalysisPlugin.plugin_data("caption")
+    def generate_caption(self, track: NendoTrack) -> dict:
+        audio_tensor = get_audio(track.resource.src)
+        audio_tensor = audio_tensor.to(self.device)
+
+        with torch.no_grad():
+            output = self.model.generate(
+                samples=audio_tensor,
+                num_beams=settings.num_beams,
+            )
+        return {"caption": add_time_information(audio_tensor.shape[0], output)}
 
     @NendoAnalysisPlugin.run_track
     def run_plugin(self, track: NendoTrack) -> NendoTrack:
@@ -84,17 +96,6 @@ class CaptionLPMusicCaps(NendoAnalysisPlugin):
             NendoTrack: The track with the caption added to the `plugin_data`.
 
         """
-        audio_tensor = get_audio(track.resource.src)
-        audio_tensor = audio_tensor.to(self.device)
-
-        with torch.no_grad():
-            output = self.model.generate(
-                samples=audio_tensor,
-                num_beams=settings.num_beams,
-            )
-        return track.add_plugin_data(
-            plugin_name="nendo_plugin_caption_lpmusiccaps",
-            plugin_version="0.0.1",
-            key="caption",
-            value=add_time_information(audio_tensor.shape[0], output),
-        )
+        self.generate_caption(track)
+        track.refresh()
+        return track
