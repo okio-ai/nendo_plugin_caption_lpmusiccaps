@@ -97,3 +97,5 @@ class CaptionLPMusicCaps(NendoAnalysisPlugin):
 
         """
         self.generate_caption(track)
+        track.refresh()
+        return track
